@@ -1,12 +1,12 @@
 import numpy as np
 from scipy.special import gamma
 
-# def F_riccati(a, x, lambd, rho, nu):
-#     # paper's equation (24) and (422)
-#     term1 = 0.5 * (-a**2 - 1j * a)
-#     term2 = lambd * (1j * a * rho * nu - 1) * x
-#     term3 = 0.5 * (lambd * nu)**2 * x**2
-#     return term1 + term2 + term3
+def F_riccati(a, x, lambd, rho, nu):
+    # paper's equation (24)
+    term1 = 0.5 * (-a**2 - 1j * a)
+    term2 = lambd * (1j * a * rho * nu - 1) * x
+    term3 = 0.5 * (lambd * nu)**2 * x**2
+    return term1 + term2 + term3
 
 # def solve_riccati(a, T, alpha, lambd, rho, nu, n_steps=300):
 #     dt = T / n_steps
@@ -42,12 +42,6 @@ from scipy.special import gamma
 
 #     return t, h, f_vals
 
-def F_riccati(a, x, lambd, rho, nu):
-    term1 = 0.5 * (-a**2 - 1j * a)
-    term2 = lambd * (1j * a * rho * nu - 1) * x
-    term3 = 0.5 * (lambd * nu)**2 * x**2
-    return term1 + term2 + term3
-
 def solve_riccati(a, T, alpha, lambd, rho, nu, n_steps=100):
     dt = T / n_steps
     t = np.linspace(0, T, n_steps + 1)
@@ -70,7 +64,7 @@ def solve_riccati(a, T, alpha, lambd, rho, nu, n_steps=100):
         # corrector step
         f_predict = F_riccati(a, h_predict, lambd, rho, nu)
         
-        # Calculate a weights for this specific step 'k'
+        # comp the a weights for the corrector step
         a_w = np.zeros(k + 2)
         a_w[0] = a_coef * (k**(alpha + 1) - (k - alpha) * (k + 1)**alpha)
         if k > 0:
@@ -78,7 +72,7 @@ def solve_riccati(a, T, alpha, lambd, rho, nu, n_steps=100):
             a_w[1:k+1] = a_coef * ((k - j + 2)**(alpha + 1) + (k - j)**(alpha + 1) - 2*(k - j + 1)**(alpha + 1))
         a_w[k+1] = a_coef
         
-        # Current f_vals slice plus the predicted f value
+        # current f_vals slice plus the predicted f value
         h[k+1] = np.sum(a_w[:-1] * f_vals[:k+1]) + a_w[-1] * f_predict
         f_vals[k+1] = F_riccati(a, h[k+1], lambd, rho, nu)
 
