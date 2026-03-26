@@ -2,10 +2,11 @@ import numpy as np
 from scipy.special import gamma
 
 def F_riccati(a, x, lambd, rho, nu):
-    # paper's equation (24)
+    # Standard Heston Riccati: F(u, x) = ½(-u² - iu) + (iuρν - λ)x + ½ν²x²
+    # This matches char_func_standard_heston so that rough Heston → standard Heston as α → 1
     term1 = 0.5 * (-a**2 - 1j * a)
-    term2 = lambd * (1j * a * rho * nu - 1) * x
-    term3 = 0.5 * (lambd * nu)**2 * x**2
+    term2 = (1j * a * rho * nu - lambd) * x
+    term3 = 0.5 * nu**2 * x**2
     return term1 + term2 + term3
 
 # def solve_riccati(a, T, alpha, lambd, rho, nu, n_steps=300):
@@ -42,7 +43,7 @@ def F_riccati(a, x, lambd, rho, nu):
 
 #     return t, h, f_vals
 
-def solve_riccati(a, T, alpha, lambd, rho, nu, n_steps=100):
+def solve_riccati(a, T, alpha, lambd, rho, nu, n_steps=1500):
     dt = T / n_steps
     t = np.linspace(0, T, n_steps + 1)
     h = np.zeros(n_steps + 1, dtype=complex)

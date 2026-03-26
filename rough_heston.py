@@ -5,16 +5,15 @@ from riccati import solve_riccati
 
 def characteristic_function(a, T, alpha, lambd, rho, nu, theta, V0, n_steps=100):
     t, h, f_vals = solve_riccati(a, T, alpha, lambd, rho, nu, n_steps)
-    
-    # g1 is the standard integral of h
-    # numpy 2.4 renamed `trapz` to `trapezoid` we use whichever is available idk the version
+
+    # g1 = λθ ∫₀ᵀ h(s) ds  (integral of h over the time grid)
+    # g2 = h(T)             (final value; equals ∫F dt only when α=1)
     if hasattr(np, 'trapezoid'):
         g1 = theta * lambd * np.trapezoid(h, t)
-        g2 = np.trapezoid(f_vals, t)
     else:
         g1 = theta * lambd * np.trapz(h, t)
-        g2 = np.trapz(f_vals, t)
-    
+    g2 = h[-1]
+
     return np.exp(g1 + V0 * g2)
 
 def price_rough_heston(S0, K, T, r, params, option_type='call'):
@@ -157,3 +156,26 @@ def rough_heston_joint_mse(params, call_strikes, call_prices, put_strikes, put_p
     # if nothing works we just return large error
     except Exception:
         return 1e10
+
+def get_char_func_values(a_grid, T, params, n_steps=1500):
+    """
+    Computes the characteristic function values for a grid of 'a' values.
+    params = (alpha, lambd, rho, nu, theta, V0)
+    """
+    alpha, lambd, rho, nu, theta, V0 = params
+    results = []
+    
+    for a in a_grid:
+        # Solve Riccati for this specific frequency
+        t, h, f_vals = solve_riccati(a, T, alpha, lambd, rho, nu, n_steps)
+        
+        if hasattr(np, 'trapezoid'):
+            g1 = theta * lambd * np.trapezoid(h, t)
+        else:
+            g1 = theta * lambd * np.trapz(h, t)
+        g2 = h[-1]
+
+        phi = np.exp(g1 + V0 * g2)
+        results.append(phi)
+        
+    return np.array(results)
